@@ -1,5 +1,6 @@
 import psycopg2
 import argparse
+from pygithub3 import Github
 
 parser = argparse.ArgumentParser(description='Trac tickets to GitHub Issues migration tool.')
 parser.add_argument('--dbname', help='Database name')
@@ -16,3 +17,6 @@ for row in cursor:
 
 cursor.close()
 connection.close()
+
+gh = Github(token='*******************************************', user='andreagrandi', repo='andrea_test1')
+gh.issues.create(dict(title='My test issue', body='This needs to be fixed ASAP.', assignee='andreagrandi'))
