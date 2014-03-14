@@ -19,8 +19,8 @@ args = parser.parse_args()
 # so the Issues can be assigned properly
 
 if args.users:
-	users_json_data = open(args.users).read()
-	users_map = json.loads(users_json_data)
+    users_json_data = open(args.users).read()
+    users_map = json.loads(users_json_data)
 
 # Initialize the GitHub API with access token, user and repository
 gh = Github(token=args.ghtoken, user=args.ghuser, repo=args.ghrepo)
@@ -34,26 +34,26 @@ cursor.execute("SELECT name, description, due, completed FROM milestone;")
 milestones_map = {}
 
 for row in cursor:
-	name = row[0]
-	description = row[1]
-	due = row[2]
-	completed = row[3]
+    name = row[0]
+    description = row[1]
+    due = row[2]
+    completed = row[3]
 
-	milestone = dict(title=name, description=description)
+    milestone = dict(title=name, description=description)
 
-	if int(due) > 0:
-		# Convert the date from trac in64 format to GitHub ISO 8601
-		mil_due = datetime.datetime.utcfromtimestamp(int(str(due)[:-6])).isoformat()
-		milestone["due_on"] = mil_due
+    if int(due) > 0:
+        # Convert the date from trac in64 format to GitHub ISO 8601
+        mil_due = datetime.datetime.utcfromtimestamp(int(str(due)[:-6])).isoformat()
+        milestone["due_on"] = mil_due
 
-	if int(completed) > 0:
-		milestone["state"] = "closed"
+    if int(completed) > 0:
+        milestone["state"] = "closed"
 
-	gh_milestone = gh.issues.milestones.create(milestone)
+    gh_milestone = gh.issues.milestones.create(milestone)
 
-	# Create a temporary Milestones map that we will use later when creating tickets
-	milestones_map[name] = gh_milestone.number
-	print gh_milestone
+    # Create a temporary Milestones map that we will use later when creating tickets
+    milestones_map[name] = gh_milestone.number
+    print gh_milestone
 
 # Create missing Labels on Issues
 gh.issues.labels.create(dict(name='task', color='FFAA00'))
@@ -61,33 +61,47 @@ gh.issues.labels.create(dict(name='concern', color='009999'))
 gh.issues.labels.create(dict(name='requirement', color='00B25C'))
 
 # Get all the Tickets from Trac
-cursor.execute("SELECT id, summary, description , owner, milestone, component, status FROM ticket ORDER BY id;")
+cursor.execute("SELECT id, summary, description, owner, milestone, component, status, type FROM ticket ORDER BY id;")
 
 for row in cursor:
-	id = row[0]
-	summary = row[1]
-	description = row[2]
-	owner = row[3]
-	milestone = row[4]
-	component = row[5]
-	status = row[6]
+    ticket_id = row[0]
+    summary = row[1]
+    description = row[2]
+    owner = row[3]
+    milestone = row[4]
+    component = row[5]
+    status = row[6]
+    ticket_type = row[7]
 
-	issue = dict(title=summary, body=description)
+    issue = dict(title=summary, body=description)
 
-	if owner != '':
-		if users_map.has_key(owner):
-			issue["assignee"] = users_map.get(owner)
+    if args.users:
+        if owner != '':
+            if users_map.has_key(owner):
+                issue["assignee"] = users_map.get(owner)
 
-	if milestone != '':
-		if milestones_map.has_key(milestone):
-			issue["milestone"] = milestones_map.get(milestone)
+    if milestone != '':
+        if milestones_map.has_key(milestone):
+            issue["milestone"] = milestones_map.get(milestone)
 
-	gh_issue = gh.issues.create(issue)
+    gh_issue = gh.issues.create(issue)
 
-	if status == 'closed':
-		gh.issues.update(gh_issue.id, dict(title=gh_issue.title, state='closed'))
+    if ticket_type == 'defect':
+        gh.issues.labels.add_to_issue(gh_issue.number, 'bug')
+    if ticket_type == 'task':
+        gh.issues.labels.add_to_issue(gh_issue.number, 'task')
+    if ticket_type == 'enhancement':
+        gh.issues.labels.add_to_issue(gh_issue.number, 'enhancement')
+    if ticket_type == 'concern':
+        gh.issues.labels.add_to_issue(gh_issue.number, 'concern')
+    if ticket_type == 'requirement':
+        gh.issues.labels.add_to_issue(gh_issue.number, 'requirement')
 
-	print gh_issue
+
+    if status == 'closed':
+        gh.issues.update(gh_issue.id, dict(title=gh_issue.title, state='closed'))
+
+    print gh_issue
 
 cursor.close()
 connection.close()
