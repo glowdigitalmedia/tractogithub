@@ -55,7 +55,10 @@ for row in cursor:
 	milestones_map[name] = gh_milestone.number
 	print gh_milestone
 
-#cursor.close()
+# Create missing Labels on Issues
+gh.issues.labels.create(dict(name='task', color='FFAA00'))
+gh.issues.labels.create(dict(name='concern', color='009999'))
+gh.issues.labels.create(dict(name='requirement', color='00B25C'))
 
 # Get all the Tickets from Trac
 cursor.execute("SELECT id, summary, description , owner, milestone, component, status FROM ticket ORDER BY id;")
