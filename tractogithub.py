@@ -6,6 +6,9 @@ parser = argparse.ArgumentParser(description='Trac tickets to GitHub Issues migr
 parser.add_argument('--dbname', help='Database name')
 parser.add_argument('--dbuser', help='Database user')
 parser.add_argument('--dbpassword', help='Database password')
+parser.add_argument('--ghtoken', help='GitHub token')
+parser.add_argument('--ghuser', help='GitHub user')
+parser.add_argument('--ghrepo', help='GitHub repository')
 args = parser.parse_args()
 
 connection = psycopg2.connect(dbname=args.dbname, user=args.dbuser, password=args.dbpassword)
