@@ -33,12 +33,7 @@ cursor.execute("SELECT name, description, due, completed FROM milestone;")
 
 milestones_map = {}
 
-for row in cursor:
-    name = row[0]
-    description = row[1]
-    due = row[2]
-    completed = row[3]
-
+for name, description, due, completed in cursor:
     milestone = dict(title=name, description=description)
 
     if int(due) > 0:
@@ -66,16 +61,7 @@ cursor.execute("SELECT id, summary, description, owner, milestone, component, st
 # Will use this cursor to query comments for each Ticket
 comments_cursor = connection.cursor()
 
-for row in cursor:
-    ticket_id = row[0]
-    summary = row[1]
-    description = row[2]
-    owner = row[3]
-    milestone = row[4]
-    component = row[5]
-    status = row[6]
-    ticket_type = row[7]
-
+for ticket_id, summary, description, owner, milestone, component, status, ticket_type in cursor:
     issue = dict(title=summary, body=description)
 
     if args.users:
