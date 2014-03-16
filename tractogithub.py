@@ -109,5 +109,7 @@ for row in cursor:
 
     print gh_issue
 
+# Close used cursors and database connection
+comments_cursor = connection.cursor()
 cursor.close()
 connection.close()
