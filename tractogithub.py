@@ -90,6 +90,13 @@ for ticket_id, summary, description, owner, milestone, component, status, ticket
     comments_data = ("comment", str(ticket_id))
     comments_cursor.execute(comments_sql, comments_data)
 
+    for author, newvalue in comments_cursor:
+        if newvalue:
+            # prefix comment with author as git doesn't keep them separate
+            if author:
+                body = "[%s] %s" % (author, newvalue)
+                gh.issues.comments.create(gh_issue.number, dict(body=body))
+
     if status == 'closed':
         gh.issues.update(gh_issue.id, dict(title=gh_issue.title, state='closed'))
 
