@@ -63,6 +63,9 @@ gh.issues.labels.create(dict(name='requirement', color='00B25C'))
 # Get all the Tickets from Trac
 cursor.execute("SELECT id, summary, description, owner, milestone, component, status, type FROM ticket ORDER BY id;")
 
+# Will use this cursor to query comments for each Ticket
+comments_cursor = connection.cursor()
+
 for row in cursor:
     ticket_id = row[0]
     summary = row[1]
@@ -97,6 +100,9 @@ for row in cursor:
     if ticket_type == 'requirement':
         gh.issues.labels.add_to_issue(gh_issue.number, 'requirement')
 
+    comments_sql = 'SELECT author, newvalue AS body FROM ticket_change WHERE field=%s AND ticket=%s'
+    comments_data = ("comment", str(ticket_id))
+    comments_cursor.execute(comments_sql, comments_data)
 
     if status == 'closed':
         gh.issues.update(gh_issue.id, dict(title=gh_issue.title, state='closed'))
