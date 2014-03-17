@@ -56,7 +56,10 @@ gh.issues.labels.create(dict(name='concern', color='009999'))
 gh.issues.labels.create(dict(name='requirement', color='00B25C'))
 
 # Get all the Tickets from Trac
-cursor.execute("SELECT id, summary, description, owner, milestone, component, status, type FROM ticket ORDER BY id;")
+tickets_sql_query = "SELECT id, summary, description, owner, milestone, component, status, type \
+	FROM ticket WHERE status=%s or status=%s ORDER BY id;"
+tickets_sql_data = ('new', 'assigned')
+cursor.execute(tickets_sql_query, tickets_sql_data)
 
 # Will use this cursor to query comments for each Ticket
 comments_cursor = connection.cursor()
@@ -75,16 +78,18 @@ for ticket_id, summary, description, owner, milestone, component, status, ticket
 
     gh_issue = gh.issues.create(issue)
 
-    if ticket_type == 'defect':
-        gh.issues.labels.add_to_issue(gh_issue.number, 'bug')
-    if ticket_type == 'task':
-        gh.issues.labels.add_to_issue(gh_issue.number, 'task')
-    if ticket_type == 'enhancement':
-        gh.issues.labels.add_to_issue(gh_issue.number, 'enhancement')
-    if ticket_type == 'concern':
-        gh.issues.labels.add_to_issue(gh_issue.number, 'concern')
-    if ticket_type == 'requirement':
-        gh.issues.labels.add_to_issue(gh_issue.number, 'requirement')
+    # Temporary disabled because there is a bug in the library
+    # 
+    # if ticket_type == 'defect':
+    #     gh.issues.labels.add_to_issue(gh_issue.number, 'bug')
+    # if ticket_type == 'task':
+    #     gh.issues.labels.add_to_issue(gh_issue.number, 'task')
+    # if ticket_type == 'enhancement':
+    #     gh.issues.labels.add_to_issue(gh_issue.number, 'enhancement')
+    # if ticket_type == 'concern':
+    #     gh.issues.labels.add_to_issue(gh_issue.number, 'concern')
+    # if ticket_type == 'requirement':
+    #     gh.issues.labels.add_to_issue(gh_issue.number, 'requirement')
 
     comments_sql = 'SELECT author, newvalue AS body FROM ticket_change WHERE field=%s AND ticket=%s'
     comments_data = ("comment", str(ticket_id))
@@ -95,7 +100,7 @@ for ticket_id, summary, description, owner, milestone, component, status, ticket
             # prefix comment with author as git doesn't keep them separate
             if author:
                 body = "[%s] %s" % (author, newvalue)
-                gh.issues.comments.create(gh_issue.number, dict(body=body))
+                gh.issues.comments.create(gh_issue.number, body)
 
     if status == 'closed':
         gh.issues.update(gh_issue.id, dict(title=gh_issue.title, state='closed'))
