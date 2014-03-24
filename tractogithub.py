@@ -5,6 +5,8 @@ import datetime
 from pygithub3 import Github
 
 parser = argparse.ArgumentParser(description='Trac tickets to GitHub Issues migration tool.')
+parser.add_argument('--dbhost', help='Database host')
+parser.add_argument('--dbport', help='Database port')
 parser.add_argument('--dbname', help='Database name')
 parser.add_argument('--dbuser', help='Database user')
 parser.add_argument('--dbpassword', help='Database password')
@@ -25,7 +27,7 @@ if args.users:
 # Initialize the GitHub API with access token, user and repository
 gh = Github(token=args.ghtoken, user=args.ghuser, repo=args.ghrepo)
 
-connection = psycopg2.connect(dbname=args.dbname, user=args.dbuser, password=args.dbpassword)
+connection = psycopg2.connect(dbname=args.dbname, user=args.dbuser, password=args.dbpassword, host=args.dbhost, port=args.dbport)
 cursor = connection.cursor()
 
 # Get all the Milestones from Trac
